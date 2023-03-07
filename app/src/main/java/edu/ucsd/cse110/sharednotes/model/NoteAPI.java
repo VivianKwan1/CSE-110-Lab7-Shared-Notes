@@ -11,8 +11,10 @@ import com.google.gson.Gson;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 
 public class NoteAPI {
     // TODO: Implement the API using OkHttp!
@@ -72,5 +74,49 @@ public class NoteAPI {
 
         // We can use future.get(1, SECONDS) to wait for the result.
         return future;
+    }
+
+    @WorkerThread
+    public Note getNote(String title) {
+        // URLs cannot contain spaces, so we replace them with %20.
+        String encodedTitle = title.replace(" ", "%20");
+
+        var request = new Request.Builder()
+                .url("https://sharednotes.goto.ucsd.edu/notes/" + encodedTitle)
+                .method("GET", null)
+                .build();
+
+        try (var response = client.newCall(request).execute()) {
+            assert response.body() != null;
+            var body = response.body().string();
+            Log.i("getNote", body);
+            return Note.fromJSON(body);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @WorkerThread
+    public void putNote(Note note) {
+        // URLs cannot contain spaces, so we replace them with %20.
+        String encodedTitle = note.title.replace(" ", "%20");
+        final MediaType json = MediaType.get("application/json; charset=utf-8");
+        var noteContent = "{\n" +
+                "\"content\": " + note.content + "\n" +
+                "\"updated_at:\": " + note.updatedAt + "\n" +
+                "}";
+        var reqBody = RequestBody.create(noteContent, json);
+        var request = new Request.Builder()
+                .url("https://sharednotes.goto.ucsd.edu/notes/" + encodedTitle)
+                .method("PUT", reqBody)
+                .build();
+        try (var response = client.newCall(request).execute()) {
+            assert response.body() != null;
+            var body = response.body().string();
+            Log.i("putNote", body);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
