@@ -1,5 +1,7 @@
 package edu.ucsd.cse110.sharednotes.model;
 
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -16,7 +18,7 @@ import java.util.concurrent.ScheduledExecutorService;
 public class NoteRepository {
     private final NoteDao dao;
     private final NoteAPI api = new NoteAPI();
-//    private final Note newNote = new Note("", "");
+    private ScheduledFuture<?> noteFuture;
     public NoteRepository(NoteDao dao) {
         this.dao = dao;
     }
@@ -55,6 +57,7 @@ public class NoteRepository {
     }
 
     public void upsertSynced(Note note) {
+        Log.i("upsertsync", note.title);
         upsertLocal(note);
         upsertRemote(note);
     }
@@ -99,8 +102,16 @@ public class NoteRepository {
         // You don't need to worry about killing background threads.
         var executor = Executors.newSingleThreadScheduledExecutor();
         var noteContent = new MutableLiveData<Note>();
-        ScheduledFuture<?> newNote = executor.scheduleAtFixedRate(() -> {
-            noteContent.postValue(api.getNote(title));
+        noteFuture = executor.scheduleAtFixedRate(() -> {
+            try {
+                noteContent.postValue(api.getNote(title));
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+            }
         }, 0, 3000, TimeUnit.MILLISECONDS);
         return noteContent;
     }
@@ -108,6 +119,7 @@ public class NoteRepository {
     public void upsertRemote(Note note) {
         if(note != null) {
             api.putNote(note);
+            Log.i("upsertremote", note.title);
         }
     }
 }

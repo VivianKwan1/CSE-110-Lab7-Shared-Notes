@@ -8,13 +8,20 @@ import androidx.annotation.WorkerThread;
 
 import com.google.gson.Gson;
 
+import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class NoteAPI {
     // TODO: Implement the API using OkHttp!
@@ -77,46 +84,53 @@ public class NoteAPI {
     }
 
     @WorkerThread
-    public Note getNote(String title) {
-        // URLs cannot contain spaces, so we replace them with %20.
-        String encodedTitle = title.replace(" ", "%20");
-
-        var request = new Request.Builder()
-                .url("https://sharednotes.goto.ucsd.edu/notes/" + encodedTitle)
+    public Note getNote(String title) throws ExecutionException, InterruptedException, TimeoutException {
+        Request request = new Request.Builder()
+                .url("https://sharednotes.goto.ucsd.edu/notes/" + title)
                 .method("GET", null)
                 .build();
 
-        try (var response = client.newCall(request).execute()) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Callable<Note> callable = () -> {
+            var response = client.newCall(request).execute();
             assert response.body() != null;
             var body = response.body().string();
             Log.i("getNote", body);
             return Note.fromJSON(body);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        };
+        Future<Note> future = executor.submit(callable);
+        Note note = future.get(1, TimeUnit.SECONDS);
+        return note;
     }
 
     @WorkerThread
     public void putNote(Note note) {
         // URLs cannot contain spaces, so we replace them with %20.
-        String encodedTitle = note.title.replace(" ", "%20");
-        final MediaType json = MediaType.get("application/json; charset=utf-8");
-        var noteContent = "{\n" +
-                "\"content\": " + note.content + "\n" +
-                "\"updated_at:\": " + note.updatedAt + "\n" +
-                "}";
-        var reqBody = RequestBody.create(noteContent, json);
-        var request = new Request.Builder()
-                .url("https://sharednotes.goto.ucsd.edu/notes/" + encodedTitle)
-                .method("PUT", reqBody)
+//
+        String title = note.title.replace(" ", "%20");
+        String noteContent = "{ \"content\":\"" + note.content + "\",\"updated_at\":\"" + note.updatedAt + "\"}";
+        MediaType json = MediaType.get("application/json; charset=utf-8");
+        RequestBody body = RequestBody.create(noteContent, json);
+        Request request = new Request.Builder()
+                .url("https://sharednotes.goto.ucsd.edu/notes/" + title)
+                .method("PUT", body)
                 .build();
-        try (var response = client.newCall(request).execute()) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            Response response = null;
+            try {
+                response = client.newCall(request).execute();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             assert response.body() != null;
-            var body = response.body().string();
-            Log.i("putNote", body);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            String body1 = null;
+            try {
+                body1 = response.body().string();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            Log.i("putNote", body1);
+        });
     }
 }
