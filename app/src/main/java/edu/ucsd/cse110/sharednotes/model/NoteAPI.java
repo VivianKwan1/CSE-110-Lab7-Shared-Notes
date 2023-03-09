@@ -47,9 +47,9 @@ public class NoteAPI {
 
     /**
      * An example of sending a GET request to the server.
-     *
+     * <p>
      * The /echo/{msg} endpoint always just returns {"message": msg}.
-     *
+     * <p>
      * This method should can be called on a background thread (Android
      * disallows network requests on the main thread).
      */
@@ -108,9 +108,9 @@ public class NoteAPI {
         // URLs cannot contain spaces, so we replace them with %20.
 //
         String title = note.title.replace(" ", "%20");
-//        String noteContent = "{  " + "\"content\":" + "\"" + note.content + "\"" + "," + "\"updated_at\":" + "\"" + note.updatedAt + "\"" + "}";
+        String noteContent = "{  " + "\"content\":" + "\"" + note.content + "\"" + "," + "\"version\":" + "\"" + note.version + "\"" + "}";
         MediaType json = MediaType.get("application/json; charset=utf-8");
-        RequestBody body = RequestBody.create(note.toJSON(), json);
+        RequestBody body = RequestBody.create(noteContent, json);
         Request request = new Request.Builder()
                 .url("https://sharednotes.goto.ucsd.edu/notes/" + title)
                 .method("PUT", body)
@@ -132,11 +132,5 @@ public class NoteAPI {
             }
             Log.i("putNote", note.version + "");
         });
-    }
-
-    public String noteToJson(Note note) {
-        String toJson = "{  " + "\"content\":" + "\"" + note.content + "\"" + "," + "\"version\":" + "\"" + note.version + "\"" + "}";
-        Log.i("RIGHT FORMAT", toJson);
-        return toJson;
     }
 }
