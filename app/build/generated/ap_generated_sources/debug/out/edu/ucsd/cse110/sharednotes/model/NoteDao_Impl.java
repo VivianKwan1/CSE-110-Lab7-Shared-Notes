@@ -50,7 +50,7 @@ public final class NoteDao_Impl extends NoteDao {
     this.__upsertionAdapterOfNote = new EntityUpsertionAdapter<Note>(new EntityInsertionAdapter<Note>(__db) {
       @Override
       public String createQuery() {
-        return "INSERT INTO `notes` (`title`,`content`,`updatedAt`) VALUES (?,?,?)";
+        return "INSERT INTO `notes` (`title`,`content`,`version`) VALUES (?,?,?)";
       }
 
       @Override
@@ -65,12 +65,12 @@ public final class NoteDao_Impl extends NoteDao {
         } else {
           stmt.bindString(2, value.content);
         }
-        stmt.bindLong(3, value.updatedAt);
+        stmt.bindLong(3, value.version);
       }
     }, new EntityDeletionOrUpdateAdapter<Note>(__db) {
       @Override
       public String createQuery() {
-        return "UPDATE `notes` SET `title` = ?,`content` = ?,`updatedAt` = ? WHERE `title` = ?";
+        return "UPDATE `notes` SET `title` = ?,`content` = ?,`version` = ? WHERE `title` = ?";
       }
 
       @Override
@@ -85,7 +85,7 @@ public final class NoteDao_Impl extends NoteDao {
         } else {
           stmt.bindString(2, value.content);
         }
-        stmt.bindLong(3, value.updatedAt);
+        stmt.bindLong(3, value.version);
         if (value.title == null) {
           stmt.bindNull(4);
         } else {
@@ -167,7 +167,7 @@ public final class NoteDao_Impl extends NoteDao {
         try {
           final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
           final int _cursorIndexOfContent = CursorUtil.getColumnIndexOrThrow(_cursor, "content");
-          final int _cursorIndexOfUpdatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "updatedAt");
+          final int _cursorIndexOfVersion = CursorUtil.getColumnIndexOrThrow(_cursor, "version");
           final Note _result;
           if(_cursor.moveToFirst()) {
             final String _tmpTitle;
@@ -183,7 +183,7 @@ public final class NoteDao_Impl extends NoteDao {
               _tmpContent = _cursor.getString(_cursorIndexOfContent);
             }
             _result = new Note(_tmpTitle,_tmpContent);
-            _result.updatedAt = _cursor.getLong(_cursorIndexOfUpdatedAt);
+            _result.version = _cursor.getLong(_cursorIndexOfVersion);
           } else {
             _result = null;
           }
@@ -211,7 +211,7 @@ public final class NoteDao_Impl extends NoteDao {
         try {
           final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
           final int _cursorIndexOfContent = CursorUtil.getColumnIndexOrThrow(_cursor, "content");
-          final int _cursorIndexOfUpdatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "updatedAt");
+          final int _cursorIndexOfVersion = CursorUtil.getColumnIndexOrThrow(_cursor, "version");
           final List<Note> _result = new ArrayList<Note>(_cursor.getCount());
           while(_cursor.moveToNext()) {
             final Note _item;
@@ -228,7 +228,7 @@ public final class NoteDao_Impl extends NoteDao {
               _tmpContent = _cursor.getString(_cursorIndexOfContent);
             }
             _item = new Note(_tmpTitle,_tmpContent);
-            _item.updatedAt = _cursor.getLong(_cursorIndexOfUpdatedAt);
+            _item.version = _cursor.getLong(_cursorIndexOfVersion);
             _result.add(_item);
           }
           return _result;

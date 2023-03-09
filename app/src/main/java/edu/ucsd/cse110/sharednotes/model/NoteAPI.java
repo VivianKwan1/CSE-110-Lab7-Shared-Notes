@@ -130,12 +130,12 @@ public class NoteAPI {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            Log.i("putNote", note.updatedAt + "");
+            Log.i("putNote", note.version + "");
         });
     }
 
     public String noteToJson(Note note) {
-        String toJson = "{  " + "\"content\":" + "\"" + note.content + "\"" + "," + "\"updated_at\":" + "\"" + note.updatedAt + "\"" + "}";
+        String toJson = "{  " + "\"content\":" + "\"" + note.content + "\"" + "," + "\"version\":" + "\"" + note.version + "\"" + "}";
         Log.i("RIGHT FORMAT", toJson);
         return toJson;
     }
