@@ -108,9 +108,9 @@ public class NoteAPI {
         // URLs cannot contain spaces, so we replace them with %20.
 //
         String title = note.title.replace(" ", "%20");
-        String noteContent = "{ \"content\":\"" + note.content + "\",\"updated_at\":\"" + note.updatedAt + "\"}";
+//        String noteContent = "{  " + "\"content\":" + "\"" + note.content + "\"" + "," + "\"updated_at\":" + "\"" + note.updatedAt + "\"" + "}";
         MediaType json = MediaType.get("application/json; charset=utf-8");
-        RequestBody body = RequestBody.create(noteContent, json);
+        RequestBody body = RequestBody.create(note.toJSON(), json);
         Request request = new Request.Builder()
                 .url("https://sharednotes.goto.ucsd.edu/notes/" + title)
                 .method("PUT", body)
@@ -130,7 +130,13 @@ public class NoteAPI {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            Log.i("putNote", body1);
+            Log.i("putNote", note.updatedAt + "");
         });
+    }
+
+    public String noteToJson(Note note) {
+        String toJson = "{  " + "\"content\":" + "\"" + note.content + "\"" + "," + "\"updated_at\":" + "\"" + note.updatedAt + "\"" + "}";
+        Log.i("RIGHT FORMAT", toJson);
+        return toJson;
     }
 }
